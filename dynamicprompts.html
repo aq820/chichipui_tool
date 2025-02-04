@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Prompt Generator</title>
+        <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .accordion {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: 0.4s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+
+        .active, .accordion:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .panel {
+            padding: 0 18px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .wildcard-inputs {
+            padding: 15px 0;
+        }
+
+        .wildcard-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .generate-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .generate-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .output-container {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .output-text {
+            width: 100%;
+            padding: 15px;
+            background-color: #272822;
+            color: #f8f8f2;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background-color: #666;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .accordion {
+                font-size: 14px;
+                padding: 15px;
+            }
+
+            .wildcard-input {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Prompt Generator</h1>
+        <p>このツールを使用して、プロンプトにワイルドカードを含め、ランダムに置換されたプロンプトを生成できます。使用方法は以下の通りです：</p>
+        <ol>
+            <li>プロンプト入力欄に*01～*10のワイルドカードを含むプロンプトを入力</li>
+            <li>各ワイルドカードのアコーディオンを開いて、置換候補を入力</li>
+            <li>「プロンプト生成」ボタンをクリックして結果を生成</li>
+            <li>コピーボタンで生成されたプロンプトをクリップボードにコピー</li>
+        </ol>
+
+        <div style="margin: 20px 0;">
+            <button onclick="exportData()" style="margin-right: 10px;">データをエクスポート</button>
+            <input type="file" onchange="importData(event)" accept=".json">
+        </div>
+
+        <textarea class="prompt-input" placeholder="プロンプトを入力してください (*01～*10のワイルドカードを使用可能)"></textarea>
+        <div id="wildcards"></div>
+        <button class="generate-btn">プロンプト生成</button>
+        <div class="output-container" style="display: none;">
+            <pre class="output-text"></pre>
+            <button class="copy-btn">コピー</button>
+        </div>
+    </div>
+
+    <script>
+        const numWildcards = 10;
+        const numInputsPerWildcard = 10;
+
+        // ワイルドカードセクションの生成
+        const wildcardsContainer = document.getElementById('wildcards');
+        
+        for (let i = 1; i <= numWildcards; i++) {
+            const wildcardNum = String(i).padStart(2, '0');
+            const section = document.createElement('div');
+            
+            const button = document.createElement('button');
+            button.className = 'accordion';
+            button.textContent = `ワイルドカード *${wildcardNum}`;
+            
+            const panel = document.createElement('div');
+            panel.className = 'panel';
+            
+            const inputsContainer = document.createElement('div');
+            inputsContainer.className = 'wildcard-inputs';
+            
+            for (let j = 0; j < numInputsPerWildcard; j++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'wildcard-input';
+                input.placeholder = `オプション ${j + 1}`;
+                input.dataset.wildcard = wildcardNum;
+                inputsContainer.appendChild(input);
+            }
+            
+            panel.appendChild(inputsContainer);
+            section.appendChild(button);
+            section.appendChild(panel);
+            wildcardsContainer.appendChild(section);
+        }
+
+        // アコーディオンの動作
+        document.querySelectorAll('.accordion').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                }
+            });
+        });
+
+        // プロンプト生成
+        document.querySelector('.generate-btn').addEventListener('click', function() {
+            const promptInput = document.querySelector('.prompt-input').value;
+            let generatedPrompt = promptInput;
+
+            for (let i = 1; i <= numWildcards; i++) {
+                const wildcardNum = String(i).padStart(2, '0');
+                const wildcardPattern = new RegExp(`\\*${wildcardNum}`, 'g');
+                
+                if (promptInput.includes(`*${wildcardNum}`)) {
+                    const inputs = Array.from(document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`))
+                        .map(input => input.value)
+                        .filter(value => value.trim() !== '');
+                    
+                    if (inputs.length > 0) {
+                        while (generatedPrompt.includes(`*${wildcardNum}`)) {
+                            const randomValue = inputs[Math.floor(Math.random() * inputs.length)];
+                            generatedPrompt = generatedPrompt.replace(`*${wildcardNum}`, randomValue);
+                        }
+                    }
+                }
+            }
+
+            const outputContainer = document.querySelector('.output-container');
+            const outputText = document.querySelector('.output-text');
+            outputText.textContent = generatedPrompt;
+            outputContainer.style.display = 'block';
+        });
+
+        // コピー機能
+        document.querySelector('.copy-btn').addEventListener('click', function() {
+            const outputText = document.querySelector('.output-text');
+            navigator.clipboard.writeText(outputText.textContent)
+                .then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = 'コピーしました！';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('コピーに失敗しました:', err);
+                });
+        });
+
+        function exportData() {
+            const promptInput = document.querySelector('.prompt-input').value;
+            const wildcards = [];
+            for (let i = 1; i <= numWildcards; i++) {
+                const wildcardNum = String(i).padStart(2, '0');
+                const inputs = Array.from(document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`))
+                    .map(input => input.value);
+                wildcards.push({ wildcard: wildcardNum, inputs });
+            }
+            const data = { prompt: promptInput, wildcards };
+            const json = JSON.stringify(data);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'prompt_data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                document.querySelector('.prompt-input').value = data.prompt;
+                data.wildcards.forEach(wildcard => {
+                    wildcard.inputs.forEach((input, index) => {
+                        const inputField = document.querySelector(`input[data-wildcard="${wildcard.wildcard}"][placeholder="オプション ${index + 1}"]`);
+                        if (inputField) {
+                            inputField.value = input;
+                        }
+                    });
+                });
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
