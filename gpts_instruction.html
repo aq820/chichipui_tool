@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT命令書ジェネレーター</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --text-color: #333;
+            --bg-color: #f5f6fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .output {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.5rem;
+            background: var(--secondary-color);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-group">
+            <label for="role">役割:</label>
+            <input type="text" id="role" required>
+        </div>
+
+        <div class="form-group">
+            <label for="output">制作物:</label>
+            <input type="text" id="output" required>
+        </div>
+
+        <div class="form-group">
+            <label for="constraints">制約条件:</label>
+            <textarea id="constraints" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="input">入力文:</label>
+            <textarea id="input" required></textarea>
+        </div>
+
+        <div class="button-group">
+            <button onclick="generatePrompt()">命令書を生成</button>
+            <button onclick="exportData()">データをエクスポート</button>
+            <button onclick="document.getElementById('fileInput').click()">データをインポート</button>
+            <input type="file" id="fileInput" style="display: none" onchange="importData(this)">
+        </div>
+
+        <div id="outputArea" class="output" style="display: none">
+            <button class="copy-button" onclick="copyOutput()">コピー</button>
+            <pre id="promptOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+        function generatePrompt() {
+            const role = document.getElementById('role').value;
+            const output = document.getElementById('output').value;
+            const constraints = document.getElementById('constraints').value;
+            const input = document.getElementById('input').value;
+
+            const template = `#命令書:
+あなたは${role}です。
+以下制約条件・入力文をもとに${output}を出力してください。
+
+#制約条件:
+${constraints}
+
+#入力文:
+${input}`;
+
+            document.getElementById('promptOutput').textContent = template;
+            document.getElementById('outputArea').style.display = 'block';
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('promptOutput').textContent;
+            navigator.clipboard.writeText(output)
+                .then(() => alert('命令書をクリップボードにコピーしました'))
+                .catch(err => alert('コピーに失敗しました: ' + err));
+        }
+
+        function exportData() {
+            const data = {
+                role: document.getElementById('role').value,
+                output: document.getElementById('output').value,
+                constraints: document.getElementById('constraints').value,
+                input: document.getElementById('input').value
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chatgpt_prompt_' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        document.getElementById('role').value = data.role || '';
+                        document.getElementById('output').value = data.output || '';
+                        document.getElementById('constraints').value = data.constraints || '';
+                        document.getElementById('input').value = data.input || '';
+                        alert('データを正常にインポートしました');
+                    } catch (err) {
+                        alert('データの読み込みに失敗しました: ' + err);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</body>
+</html>
