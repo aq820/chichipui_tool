@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Prompts Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .accordion {
+            background-color: #f4f4f4;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: 0.4s;
+            margin-top: 5px;
+        }
+
+        .active, .accordion:hover {
+            background-color: #ddd;
+        }
+
+        .panel {
+            padding: 0 18px;
+            display: none;
+            background-color: white;
+            overflow: hidden;
+        }
+
+        .wildcard-input {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+        }
+
+        .button-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .output-container {
+            margin-top: 20px;
+        }
+
+        .code-block {
+            position: relative;
+            background: #f8f8f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Prompts Generator</h1>
+    <textarea class="prompt-input" placeholder="プロンプトを入力 (*01～*10のワイルドカードを使用可能)"></textarea>
+    
+    <div id="wildcards"></div>
+    
+    <div class="button-container">
+        <button onclick="generateRandomPrompt()">ランダム生成</button>
+        <button onclick="generateAllCombinations()">総当たり生成</button>
+    </div>
+    
+    <div id="output" class="output-container"></div>
+
+    <script>
+        // ワイルドカードのアコーディオンを生成
+        const wildcardContainer = document.getElementById('wildcards');
+        for (let i = 1; i <= 10; i++) {
+            const id = i.toString().padStart(2, '0');
+            const section = document.createElement('div');
+            section.innerHTML = `
+                <button class="accordion">*${id}</button>
+                <div class="panel">
+                    ${Array(10).fill().map((_, j) => `
+                        <input type="text" class="wildcard-input" data-wildcard="${id}" placeholder="オプション${j + 1}">
+                    `).join('')}
+                </div>
+            `;
+            wildcardContainer.appendChild(section);
+        }
+
+        // アコーディオンの機能を実装
+        const acc = document.getElementsByClassName("accordion");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+
+        // ランダムプロンプト生成
+        function generateRandomPrompt() {
+            const prompt = document.querySelector('.prompt-input').value;
+            const wildcards = {};
+            document.querySelectorAll('.wildcard-input').forEach(input => {
+                const id = input.dataset.wildcard;
+                if (!wildcards[id]) wildcards[id] = [];
+                if (input.value) wildcards[id].push(input.value);
+            });
+
+            const result = prompt.replace(/\*(\d{2})/g, (match, id) => {
+                if (wildcards[id] && wildcards[id].length > 0) {
+                    return wildcards[id][Math.floor(Math.random() * wildcards[id].length)];
+                }
+                return match;
+            });
+
+            addOutput(result, getUsedWildcards(prompt, wildcards));
+        }
+
+        // 総当たり生成
+        function generateAllCombinations() {
+            const prompt = document.querySelector('.prompt-input').value;
+            const wildcards = {};
+            document.querySelectorAll('.wildcard-input').forEach(input => {
+                const id = input.dataset.wildcard;
+                if (!wildcards[id]) wildcards[id] = [];
+                if (input.value) wildcards[id].push(input.value);
+            });
+
+            const wildcardIds = [...new Set(prompt.match(/\*\d{2}/g) || [])];
+            const combinations = getCombinations(wildcardIds, wildcards);
+            
+            combinations.forEach(combo => {
+                let result = prompt;
+                Object.entries(combo).forEach(([id, value]) => {
+                    result = result.replace(id, value);
+                });
+                addOutput(result, getUsedWildcards(prompt, wildcards));
+            });
+        }
+
+        // 組み合わせ生成
+        function getCombinations(ids, wildcards) {
+            const results = [{}];
+            ids.forEach(id => {
+                const values = wildcards[id.substring(1)] || [];
+                if (values.length === 0) return;
+                
+                const newResults = [];
+                results.forEach(result => {
+                    values.forEach(value => {
+                        newResults.push({...result, [id]: value});
+                    });
+                });
+                results.length = 0;
+                results.push(...newResults);
+            });
+            return results;
+        }
+
+        // 使用されたワイルドカードを取得
+        function getUsedWildcards(prompt, wildcards) {
+            const used = {};
+            prompt.match(/\*\d{2}/g)?.forEach(id => {
+                const num = id.substring(1);
+                if (wildcards[num]) {
+                    used[id] = wildcards[num];
+                }
+            });
+            return used;
+        }
+
+        // 出力を追加
+        function addOutput(result, usedWildcards) {
+            const outputContainer = document.getElementById('output');
+            const outputCount = outputContainer.getElementsByClassName('code-block').length + 1;
+            
+            const outputDiv = document.createElement('div');
+            outputDiv.innerHTML = `
+                <h3>出力結果${outputCount.toString().padStart(2, '0')}：</h3>
+                <div class="code-block">
+                    ${result}
+                    <button class="copy-btn" onclick="copyToClipboard(this)">コピー</button>
+                </div>
+                <p>使用したワイルドカード：${formatWildcards(usedWildcards)}</p>
+            `;
+            outputContainer.appendChild(outputDiv);
+        }
+
+        // ワイルドカード情報のフォーマット
+        function formatWildcards(wildcards) {
+            return Object.entries(wildcards)
+                .map(([id, values]) => `${id}[${values.join(', ')}]`)
+                .join(' ');
+        }
+
+        // クリップボードにコピー
+        function copyToClipboard(button) {
+            const text = button.parentElement.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'コピー完了!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
