@@ -3,30 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Prompts Generator</title>
+    <title>Dynamic Prompt Generator</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: sans-serif;
-            padding: 20px;
+            font-family: Arial, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
 
         .prompt-input {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
-            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
         .accordion {
-            background-color: #f4f4f4;
+            background: #eee;
             color: #444;
             cursor: pointer;
             padding: 18px;
@@ -34,9 +44,8 @@
             border: none;
             text-align: left;
             outline: none;
-            font-size: 15px;
             transition: 0.4s;
-            margin-top: 5px;
+            margin: 2px 0;
         }
 
         .active, .accordion:hover {
@@ -45,9 +54,10 @@
 
         .panel {
             padding: 0 18px;
-            display: none;
             background-color: white;
+            max-height: 0;
             overflow: hidden;
+            transition: max-height 0.2s ease-out;
         }
 
         .wildcard-input {
@@ -65,30 +75,41 @@
 
         button {
             padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+
+        button:hover {
+            background: #0056b3;
         }
 
         .output-container {
             margin-top: 20px;
         }
 
-        .code-block {
-            position: relative;
-            background: #f8f8f8;
+        .output-block {
+            background: #f8f9fa;
             padding: 15px;
+            border-radius: 5px;
             margin: 10px 0;
-            border-radius: 4px;
-            white-space: pre-wrap;
+            position: relative;
         }
 
-        .copy-btn {
+        .copy-button {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            padding: 5px 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 3px;
+            right: 10px;
+            top: 10px;
+            background: #28a745;
+        }
+
+        .export-import {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
         }
 
         @media (max-width: 768px) {
@@ -106,158 +127,241 @@
         }
     </style>
 </head>
+
 <body>
-    <h1>Dynamic Prompts Generator</h1>
-    <textarea class="prompt-input" placeholder="プロンプトを入力 (*01～*10のワイルドカードを使用可能)"></textarea>
-    
-    <div id="wildcards"></div>
-    
-    <div class="button-container">
-        <button onclick="generateRandomPrompt()">ランダム生成</button>
-        <button onclick="generateAllCombinations()">総当たり生成</button>
+    <div class="container">
+        <h1>Dynamic Prompt Generator</h1>
+        
+        <div class="instructions">
+            <h2>使い方</h2>
+            <p>1. プロンプト入力欄に生成したいプロンプトを入力します。ワイルドカードは*01～*10で指定できます。</p>
+            <p>2. 各ワイルドカードのアコーディオンを開いて、置換したい単語やフレーズを入力します。</p>
+            <p>3. 「ランダム生成」ボタンで1つのバリエーションを生成、「総当たり生成」ボタンですべての組み合わせを生成できます。</p>
+        </div>
+
+        <div class="export-import">
+            <h2>データのエクスポート/インポート</h2>
+            <button onclick="exportData()">設定をエクスポート</button>
+            <input type="file" id="importFile" accept=".json" onchange="importData(this)">
+            <button onclick="document.getElementById('importFile').click()">設定をインポート</button>
+        </div>
+
+        <textarea id="promptInput" class="prompt-input" placeholder="プロンプトを入力（例：*01の*02）"></textarea>
+
+        <div id="wildcardContainer">
+            <!-- ワイルドカードのアコーディオンは JavaScript で生成 -->
+        </div>
+
+        <div class="button-container">
+            <button onclick="generateRandom()">ランダム生成</button>
+            <button onclick="generateAll()">総当たり生成</button>
+        </div>
+
+        <div id="outputContainer" class="output-container">
+            <!-- 出力結果はここに表示 -->
+        </div>
     </div>
+
+<script>
+let outputCounter = 1;
+
+// ページ読み込み時の初期化
+window.onload = function() {
+    // ワイルドカードの生成
+    const container = document.getElementById('wildcardContainer');
+    for (let i = 1; i <= 10; i++) {
+        const wildcardNum = String(i).padStart(2, '0');
+        const accordion = document.createElement('button');
+        accordion.className = 'accordion';
+        accordion.textContent = `ワイルドカード *${wildcardNum}`;
+        
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        
+        // 10個の入力欄を作成
+        for (let j = 1; j <= 10; j++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'wildcard-input';
+            input.dataset.wildcard = wildcardNum;
+            input.dataset.index = j;
+            input.placeholder = `選択肢 ${j}`;
+            panel.appendChild(input);
+        }
+        
+        container.appendChild(accordion);
+        container.appendChild(panel);
+    }
+
+    // アコーディオンの動作設定
+    const accordions = document.getElementsByClassName('accordion');
+    for (let accordion of accordions) {
+        accordion.addEventListener('click', function() {
+            this.classList.toggle('active');
+            const panel = this.nextElementSibling;
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        });
+    }
+};
+
+// ランダム生成
+function generateRandom() {
+    const prompt = document.getElementById('promptInput').value;
+    let result = prompt;
+    const usedWildcards = [];
+
+    for (let i = 1; i <= 10; i++) {
+        const wildcardNum = String(i).padStart(2, '0');
+        const wildcardPattern = new RegExp(`\\*${wildcardNum}`, 'g');
+        
+        if (prompt.includes(`*${wildcardNum}`)) {
+            const inputs = Array.from(document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`))
+                .map(input => input.value)
+                .filter(value => value.trim() !== '');
+            
+            if (inputs.length > 0) {
+                const randomValue = inputs[Math.floor(Math.random() * inputs.length)];
+                result = result.replace(wildcardPattern, randomValue);
+                usedWildcards.push(`*${wildcardNum}: ${randomValue}`);
+            }
+        }
+    }
+
+    addOutput(result, usedWildcards);
+}
+
+// 総当たり生成
+function generateAll() {
+    const prompt = document.getElementById('promptInput').value;
+    const wildcardValues = {};
+    const usedWildcardNums = [];
+
+    // 使用されているワイルドカードを特定
+    for (let i = 1; i <= 10; i++) {
+        const wildcardNum = String(i).padStart(2, '0');
+        if (prompt.includes(`*${wildcardNum}`)) {
+            const inputs = Array.from(document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`))
+                .map(input => input.value)
+                .filter(value => value.trim() !== '');
+            
+            if (inputs.length > 0) {
+                wildcardValues[wildcardNum] = inputs;
+                usedWildcardNums.push(wildcardNum);
+            }
+        }
+    }
+
+    // 総当たり組み合わせの生成
+    function generateCombinations(index = 0, current = {}) {
+        if (index === usedWildcardNums.length) {
+            let result = prompt;
+            const usedWildcards = [];
+            
+            for (const [num, value] of Object.entries(current)) {
+                const wildcardPattern = new RegExp(`\\*${num}`, 'g');
+                result = result.replace(wildcardPattern, value);
+                usedWildcards.push(`*${num}: ${value}`);
+            }
+            
+            addOutput(result, usedWildcards);
+            return;
+        }
+
+        const currentWildcard = usedWildcardNums[index];
+        for (const value of wildcardValues[currentWildcard]) {
+            generateCombinations(index + 1, { ...current, [currentWildcard]: value });
+        }
+    }
+
+    generateCombinations();
+}
+
+// 出力の追加
+function addOutput(result, usedWildcards) {
+    const container = document.getElementById('outputContainer');
+    const outputDiv = document.createElement('div');
+    outputDiv.className = 'output-block';
     
-    <div id="output" class="output-container"></div>
+    const heading = document.createElement('h3');
+    heading.textContent = `出力結果${String(outputCounter).padStart(2, '0')}：`;
+    outputDiv.appendChild(heading);
+    
+    const pre = document.createElement('pre');
+    pre.textContent = result;
+    
+    const copyButton = document.createElement('button');
+    copyButton.className = 'copy-button';
+    copyButton.textContent = 'コピー';
+    copyButton.onclick = () => {
+        navigator.clipboard.writeText(result);
+        copyButton.textContent = 'コピー完了!';
+        setTimeout(() => copyButton.textContent = 'コピー', 2000);
+    };
+    
+    const wildcardList = document.createElement('p');
+    wildcardList.textContent = `使用したワイルドカード: ${usedWildcards.join(', ')}`;
+    
+    outputDiv.appendChild(copyButton);
+    outputDiv.appendChild(pre);
+    outputDiv.appendChild(wildcardList);
+    container.appendChild(outputDiv);
+    
+    outputCounter++;
+}
 
-    <script>
-        // ワイルドカードのアコーディオンを生成
-        const wildcardContainer = document.getElementById('wildcards');
-        for (let i = 1; i <= 10; i++) {
-            const id = i.toString().padStart(2, '0');
-            const section = document.createElement('div');
-            section.innerHTML = `
-                <button class="accordion">*${id}</button>
-                <div class="panel">
-                    ${Array(10).fill().map((_, j) => `
-                        <input type="text" class="wildcard-input" data-wildcard="${id}" placeholder="オプション${j + 1}">
-                    `).join('')}
-                </div>
-            `;
-            wildcardContainer.appendChild(section);
-        }
+// データのエクスポート
+function exportData() {
+    const data = {
+        prompt: document.getElementById('promptInput').value,
+        wildcards: {}
+    };
 
-        // アコーディオンの機能を実装
-        const acc = document.getElementsByClassName("accordion");
-        for (let i = 0; i < acc.length; i++) {
-            acc[i].addEventListener("click", function() {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
-                }
-            });
-        }
+    for (let i = 1; i <= 10; i++) {
+        const wildcardNum = String(i).padStart(2, '0');
+        const inputs = Array.from(document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`))
+            .map(input => input.value);
+        data.wildcards[wildcardNum] = inputs;
+    }
 
-        // ランダムプロンプト生成
-        function generateRandomPrompt() {
-            const prompt = document.querySelector('.prompt-input').value;
-            const wildcards = {};
-            document.querySelectorAll('.wildcard-input').forEach(input => {
-                const id = input.dataset.wildcard;
-                if (!wildcards[id]) wildcards[id] = [];
-                if (input.value) wildcards[id].push(input.value);
-            });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prompt_settings.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
 
-            const result = prompt.replace(/\*(\d{2})/g, (match, id) => {
-                if (wildcards[id] && wildcards[id].length > 0) {
-                    return wildcards[id][Math.floor(Math.random() * wildcards[id].length)];
-                }
-                return match;
-            });
-
-            addOutput(result, getUsedWildcards(prompt, wildcards));
-        }
-
-        // 総当たり生成
-        function generateAllCombinations() {
-            const prompt = document.querySelector('.prompt-input').value;
-            const wildcards = {};
-            document.querySelectorAll('.wildcard-input').forEach(input => {
-                const id = input.dataset.wildcard;
-                if (!wildcards[id]) wildcards[id] = [];
-                if (input.value) wildcards[id].push(input.value);
-            });
-
-            const wildcardIds = [...new Set(prompt.match(/\*\d{2}/g) || [])];
-            const combinations = getCombinations(wildcardIds, wildcards);
-            
-            combinations.forEach(combo => {
-                let result = prompt;
-                Object.entries(combo).forEach(([id, value]) => {
-                    result = result.replace(id, value);
-                });
-                addOutput(result, getUsedWildcards(prompt, wildcards));
-            });
-        }
-
-        // 組み合わせ生成
-        function getCombinations(ids, wildcards) {
-            const results = [{}];
-            ids.forEach(id => {
-                const values = wildcards[id.substring(1)] || [];
-                if (values.length === 0) return;
+// データのインポート
+function importData(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                document.getElementById('promptInput').value = data.prompt || '';
                 
-                const newResults = [];
-                results.forEach(result => {
-                    values.forEach(value => {
-                        newResults.push({...result, [id]: value});
+                for (let i = 1; i <= 10; i++) {
+                    const wildcardNum = String(i).padStart(2, '0');
+                    const inputs = document.querySelectorAll(`input[data-wildcard="${wildcardNum}"]`);
+                    const values = data.wildcards[wildcardNum] || [];
+                    
+                    inputs.forEach((input, index) => {
+                        input.value = values[index] || '';
                     });
-                });
-                results.length = 0;
-                results.push(...newResults);
-            });
-            return results;
-        }
-
-        // 使用されたワイルドカードを取得
-        function getUsedWildcards(prompt, wildcards) {
-            const used = {};
-            prompt.match(/\*\d{2}/g)?.forEach(id => {
-                const num = id.substring(1);
-                if (wildcards[num]) {
-                    used[id] = wildcards[num];
                 }
-            });
-            return used;
-        }
-
-        // 出力を追加
-        function addOutput(result, usedWildcards) {
-            const outputContainer = document.getElementById('output');
-            const outputCount = outputContainer.getElementsByClassName('code-block').length + 1;
-            
-            const outputDiv = document.createElement('div');
-            outputDiv.innerHTML = `
-                <h3>出力結果${outputCount.toString().padStart(2, '0')}：</h3>
-                <div class="code-block">
-                    ${result}
-                    <button class="copy-btn" onclick="copyToClipboard(this)">コピー</button>
-                </div>
-                <p>使用したワイルドカード：${formatWildcards(usedWildcards)}</p>
-            `;
-            outputContainer.appendChild(outputDiv);
-        }
-
-        // ワイルドカード情報のフォーマット
-        function formatWildcards(wildcards) {
-            return Object.entries(wildcards)
-                .map(([id, values]) => `${id}[${values.join(', ')}]`)
-                .join(' ');
-        }
-
-        // クリップボードにコピー
-        function copyToClipboard(button) {
-            const text = button.parentElement.textContent.trim();
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = button.textContent;
-                button.textContent = 'コピー完了!';
-                setTimeout(() => {
-                    button.textContent = originalText;
-                }, 2000);
-            });
-        }
-    </script>
+            } catch (error) {
+                alert('インポートに失敗しました。ファイルを確認してください。');
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+</script>
 </body>
 </html>
