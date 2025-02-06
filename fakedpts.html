@@ -125,6 +125,51 @@
                 width: 100%;
             }
         }
+
+    /* 既存のスタイルはそのままで、以下のスタイルを追加または更新 */
+    .output-block {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+        position: relative;
+        /* コピーボタン用の余白を追加 */
+        padding-top: 50px;
+    }
+
+    .copy-button {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        background: #28a745;
+        padding: 5px 15px;
+        font-size: 0.9em;
+    }
+
+    /* 出力結果の見出しのスタイル調整 */
+    .output-block h3 {
+        margin-top: 0;
+        padding-right: 80px; /* コピーボタンとの重なりを防ぐ */
+    }
+
+    /* プリフォーマット出力のスタイル調整 */
+    .output-block pre {
+        margin-top: 10px;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    /* モバイル向けの調整 */
+    @media (max-width: 768px) {
+        .output-block {
+            padding-top: 45px;
+        }
+
+        .copy-button {
+            font-size: 0.8em;
+            padding: 4px 12px;
+        }
+    }
     </style>
 </head>
 
