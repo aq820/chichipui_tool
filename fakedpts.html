@@ -27,13 +27,33 @@
             margin-bottom: 20px;
         }
 
+    /* プロンプト入力欄のスタイルを更新 */
+    .prompt-input {
+        width: 100%;
+        min-height: 150px; /* 初期の高さを設定 */
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: vertical; /* 縦方向のリサイズを許可 */
+        font-size: 16px; /* 読みやすいフォントサイズ */
+        line-height: 1.5; /* 行間を適切に */
+        font-family: Arial, sans-serif;
+    }
+
+    /* フォーカス時のスタイル */
+    .prompt-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    /* モバイル向けの調整 */
+    @media (max-width: 768px) {
         .prompt-input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            min-height: 120px;
         }
+    }
 
         .accordion {
             background: #eee;
