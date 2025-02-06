@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stable Diffusion プロンプトジェネレーター</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .accordion {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: 0.4s;
+            margin-top: 10px;
+        }
+        .active, .accordion:hover {
+            background-color: #ccc;
+        }
+        .panel {
+            padding: 0 18px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .output {
+            background: #f8f8f8;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 4px;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+        .export-import {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stable Diffusion プロンプトジェネレーター</h1>
+        
+        <h2>使い方</h2>
+        <ol>
+            <li>プロンプト入力欄に基本プロンプトを入力（*01～*10のワイルドカードを含める）</li>
+            <li>各ワイルドカードの項目に置換したい文字列を入力</li>
+            <li>「プロンプト生成」ボタンを押すと、すべての組み合わせが生成されます</li>
+        </ol>
+
+        <h2>データのエクスポート/インポート</h2>
+        <div class="export-import">
+            <button onclick="exportData()">データをエクスポート</button>
+            <button onclick="importData()">データをインポート</button>
+            <input type="file" id="importFile" style="display: none" onchange="handleImport(this)">
+        </div>
+
+        <div class="input-group">
+            <label for="basePrompt">基本プロンプト:</label>
+            <textarea id="basePrompt" rows="4"></textarea>
+        </div>
+
+        <div id="wildcardInputs">
+            <!-- ワイルドカード入力欄は JavaScript で生成 -->
+        </div>
+
+        <button onclick="generatePrompts()">プロンプト生成</button>
+        <div id="outputArea"></div>
+    </div>
+
+    <script>
+        // ワイルドカード入力欄の生成
+        const wildcardInputs = document.getElementById('wildcardInputs');
+        for (let i = 1; i <= 10; i++) {
+            const num = i.toString().padStart(2, '0');
+            const section = document.createElement('div');
+            
+            const button = document.createElement('button');
+            button.className = 'accordion';
+            button.textContent = `ワイルドカード *${num}`;
+            
+            const panel = document.createElement('div');
+            panel.className = 'panel';
+            
+            for (let j = 1; j <= 10; j++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `*${num} 置換テキスト ${j}`;
+                input.id = `wild${num}_${j}`;
+                panel.appendChild(input);
+            }
+            
+            section.appendChild(button);
+            section.appendChild(panel);
+            wildcardInputs.appendChild(section);
+        }
+
+        // アコーディオンの設定
+        const acc = document.getElementsByClassName("accordion");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                }
+            });
+        }
+
+        // プロンプト生成関数
+        function generatePrompts() {
+            const basePrompt = document.getElementById('basePrompt').value;
+            let wildcards = {};
+            let outputCount = document.getElementsByClassName('output').length + 1;
+
+            // ワイルドカードの値を収集
+            for (let i = 1; i <= 10; i++) {
+                const num = i.toString().padStart(2, '0');
+                wildcards[`*${num}`] = [];
+                for (let j = 1; j <= 10; j++) {
+                    const value = document.getElementById(`wild${num}_${j}`).value.trim();
+                    if (value) wildcards[`*${num}`].push(value);
+                }
+            }
+
+            // 使用されているワイルドカードを特定
+            const usedWildcards = Object.keys(wildcards).filter(w => 
+                basePrompt.includes(w) && wildcards[w].length > 0
+            );
+
+            if (usedWildcards.length === 0) {
+                alert('有効なワイルドカードが見つかりません');
+                return;
+            }
+
+            // すべての組み合わせを生成
+            function generateCombinations(prompt, wildcardIndex) {
+                if (wildcardIndex >= usedWildcards.length) {
+                    return [prompt];
+                }
+
+                const currentWildcard = usedWildcards[wildcardIndex];
+                const replacements = wildcards[currentWildcard];
+                let results = [];
+
+                for (const replacement of replacements) {
+                    const newPrompt = prompt.replace(currentWildcard, replacement);
+                    results = results.concat(
+                        generateCombinations(newPrompt, wildcardIndex + 1)
+                    );
+                }
+
+                return results;
+            }
+
+            const prompts = generateCombinations(basePrompt, 0);
+
+            // 結果の表示
+            const outputArea = document.getElementById('outputArea');
+            const outputDiv = document.createElement('div');
+            outputDiv.className = 'output';
+            
+            const header = document.createElement('h3');
+            header.textContent = `出力結果${outputCount.toString().padStart(2, '0')}：`;
+            header.style.marginRight = '60px';
+            
+            const usedWildcardsText = document.createElement('p');
+            usedWildcardsText.textContent = `使用したワイルドカード: ${usedWildcards.join(', ')}`;
+            
+            const pre = document.createElement('pre');
+            pre.textContent = prompts.join('\n');
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.textContent = 'コピー';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(pre.textContent);
+                copyBtn.textContent = 'コピー完了!';
+                setTimeout(() => copyBtn.textContent = 'コピー', 2000);
+            };
+
+            outputDiv.appendChild(header);
+            outputDiv.appendChild(usedWildcardsText);
+            outputDiv.appendChild(copyBtn);
+            outputDiv.appendChild(pre);
+            outputArea.insertBefore(outputDiv, outputArea.firstChild);
+        }
+
+        // データのエクスポート
+        function exportData() {
+            const data = {
+                basePrompt: document.getElementById('basePrompt').value,
+                wildcards: {}
+            };
+
+            for (let i = 1; i <= 10; i++) {
+                const num = i.toString().padStart(2, '0');
+                data.wildcards[`*${num}`] = [];
+                for (let j = 1; j <= 10; j++) {
+                    data.wildcards[`*${num}`].push(
+                        document.getElementById(`wild${num}_${j}`).value
+                    );
+                }
+            }
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], 
+                                {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'prompt_data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // データのインポート
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        document.getElementById('basePrompt').value = data.basePrompt;
+                        
+                        for (let i = 1; i <= 10; i++) {
+                            const num = i.toString().padStart(2, '0');
+                            for (let j = 1; j <= 10; j++) {
+                                document.getElementById(`wild${num}_${j}`).value = 
+                                    data.wildcards[`*${num}`][j-1] || '';
+                            }
+                        }
+                    } catch (error) {
+                        alert('インポートに失敗しました。ファイル形式を確認してください。');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</body>
+</html>
