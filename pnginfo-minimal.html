@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>PNGINFO Minimal</title>
+  <style>
+    :root{
+      --bg:#f7f6f2;--surface:#ffffff;--text:#28251d;--muted:#6f6b63;--border:#d7d2c8;--primary:#01696f;--primary-2:#0c4e54;
+      --radius:16px;--radius-sm:12px;--space:16px;--shadow:0 8px 24px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box} html,body{margin:0;padding:0} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+    .wrap{max-width:860px;margin:0 auto;padding:16px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+    h1{font-size:clamp(28px,5vw,40px);margin:0 0 8px} h2{font-size:18px;margin:0 0 12px}
+    p{margin:0 0 10px;color:var(--muted)}
+    .grid{display:grid;gap:16px}.cols{grid-template-columns:1fr}.row{display:flex;gap:12px;flex-wrap:wrap}
+    .input,.textarea,.select,.button{width:100%;font:inherit}
+    .input,.textarea,.select{padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--text)}
+    .textarea{min-height:220px;resize:vertical}
+    .button{border:none;border-radius:12px;padding:14px 16px;background:var(--primary);color:#fff;font-weight:700}
+    .button.secondary{background:#e9e5dd;color:var(--text)}
+    .button:active{transform:translateY(1px)}
+    .preview{width:100%;max-height:360px;object-fit:contain;border-radius:12px;border:1px solid var(--border);background:#f0ede7}
+    .hidden{display:none}
+    .meta{font-size:14px;color:var(--muted)}
+    .notice{padding:12px 14px;border-radius:12px;background:#eef7f7;color:#134245;border:1px solid #cfe4e4}
+    @media (min-width:800px){.cols{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>PNGINFO Minimal</h1>
+      <p>最小構成のHTML版です。PNGの <code>tEXt</code> から <code>parameters</code> を読み取り、編集後にPNGへ書き戻します。日本語は文字化けする場合があります。</p>
+      <div class="notice">スマホではまずファイル選択欄から画像を選んでください。</div>
+    </section>
+
+    <section class="card grid">
+      <h2>画像を読み込む</h2>
+      <input id="fileInput" class="input" type="file" accept="image/png,image/*">
+      <div class="row">
+        <button id="sampleBtn" class="button secondary" type="button">サンプルを入れる</button>
+        <button id="saveBtn" class="button" type="button">PNGINFO付きPNGを保存</button>
+      </div>
+      <div id="status" class="meta">待機中</div>
+    </section>
+
+    <section class="card grid cols">
+      <div class="grid">
+        <h2>プレビュー</h2>
+        <img id="preview" class="preview hidden" alt="preview">
+        <div id="placeholder" class="meta">まだ画像は読み込まれていません。</div>
+      </div>
+      <div class="grid">
+        <h2>メタデータ本文（直接編集）</h2>
+        <textarea id="metadata" class="textarea" placeholder="ここに parameters の本文が入ります"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SAMPLE = `High resolution, Super detailed, Best Quality, masterpiece\nNegative prompt: lowres, bad anatomy\nSteps: 30, Sampler: Euler a, CFG scale: 7.0, Seed: 123456789, Size: 1024x1536`;
+
+    const el = {
+      fileInput: document.getElementById('fileInput'),
+      sampleBtn: document.getElementById('sampleBtn'),
+      saveBtn: document.getElementById('saveBtn'),
+      preview: document.getElementById('preview'),
+      placeholder: document.getElementById('placeholder'),
+      metadata: document.getElementById('metadata'),
+      status: document.getElementById('status')
+    };
+
+    const state = {
+      file: null,
+      fileName: 'image.png',
+      imageUrl: '',
+      pngBytes: null
+    };
+
+    function setStatus(text){ el.status.textContent = text; }
+    function concatArrays(arrays){ const total=arrays.reduce((s,a)=>s+a.length,0); const out=new Uint8Array(total); let o=0; for(const a of arrays){ out.set(a,o); o+=a.length; } return out; }
+    function uint32ToBytesBE(num){ return new Uint8Array([(num>>>24)&255,(num>>>16)&255,(num>>>8)&255,num&255]); }
+    function bytesToUint32BE(bytes, offset){ return ((bytes[offset]<<24)>>>0) + (bytes[offset+1]<<16) + (bytes[offset+2]<<8) + bytes[offset+3]; }
+    function isPng(bytes){ return bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10; }
+    function readAsUint8(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onerror=()=>reject(new Error('ファイルの読み込みに失敗しました')); r.onload=()=>resolve(new Uint8Array(r.result)); r.readAsArrayBuffer(file); }); }
+    async function blobToUint8(blob){ return new Uint8Array(await blob.arrayBuffer()); }
+    async function imageToPngBlob(file){
+      const url = URL.createObjectURL(file);
+      try{
+        const img = await new Promise((resolve,reject)=>{ const im=new Image(); im.onload=()=>resolve(im); im.onerror=()=>reject(new Error('画像の読み込みに失敗しました')); im.src=url; });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0);
+        return await new Promise((resolve,reject)=> canvas.toBlob(blob=> blob ? resolve(blob) : reject(new Error('PNG変換に失敗しました')), 'image/png'));
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+    function updatePreview(file){
+      if(state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+      state.imageUrl = URL.createObjectURL(file);
+      el.preview.src = state.imageUrl;
+      el.preview.classList.remove('hidden');
+      el.placeholder.classList.add('hidden');
+    }
+    function crc32(bytes){
+      let c = ~0;
+      if(!crc32.table){ crc32.table = new Uint32Array(256).map((_,n)=>{ let x=n; for(let k=0;k<8;k++) x=(x&1)?(0xEDB88320^(x>>>1)):(x>>>1); return x>>>0; }); }
+      for(let i=0;i<bytes.length;i++) c = crc32.table[(c ^ bytes[i]) & 255] ^ (c >>> 8);
+      return (~c)>>>0;
+    }
+    function parsePNG(bytes){
+      if(!isPng(bytes)) throw new Error('PNGではありません');
+      let offset = 8;
+      const chunks = [];
+      let parameters = '';
+      while(offset < bytes.length){
+        const len = bytesToUint32BE(bytes, offset); offset += 4;
+        const typeBytes = bytes.slice(offset, offset+4); offset += 4;
+        const type = new TextDecoder('latin1').decode(typeBytes);
+        const data = bytes.slice(offset, offset+len); offset += len;
+        const crc = bytes.slice(offset, offset+4); offset += 4;
+        chunks.push({ type, data, crc });
+        if(type === 'tEXt'){
+          const zero = data.indexOf(0);
+          if(zero > -1){
+            const key = new TextDecoder('latin1').decode(data.slice(0, zero));
+            const value = new TextDecoder('utf-8').decode(data.slice(zero + 1));
+            if(key === 'parameters') parameters = value;
+          }
+        }
+        if(type === 'IEND') break;
+      }
+      return { chunks, parameters };
+    }
+    function buildTextChunk(key, value){
+      const keyBytes = new TextEncoder().encode(key);
+      const valueBytes = new TextEncoder().encode(value);
+      const data = concatArrays([keyBytes, new Uint8Array([0]), valueBytes]);
+      const typeBytes = new Uint8Array([0x74,0x45,0x58,0x74]);
+      const crc = crc32(concatArrays([typeBytes, data]));
+      return concatArrays([uint32ToBytesBE(data.length), typeBytes, data, uint32ToBytesBE(crc)]);
+    }
+    function rebuildPNG(originalBytes, parameters){
+      if(!isPng(originalBytes)) throw new Error('PNGではありません');
+      const out = [originalBytes.slice(0,8)];
+      let offset = 8;
+      let inserted = false;
+      while(offset < originalBytes.length){
+        const len = bytesToUint32BE(originalBytes, offset);
+        const type = new TextDecoder('latin1').decode(originalBytes.slice(offset+4, offset+8));
+        const full = originalBytes.slice(offset, offset + 12 + len);
+        const data = originalBytes.slice(offset+8, offset+8+len);
+        if(type === 'tEXt'){
+          const zero = data.indexOf(0);
+          if(zero > -1){
+            const key = new TextDecoder('latin1').decode(data.slice(0, zero));
+            if(key === 'parameters'){ offset += 12 + len; continue; }
+          }
+        }
+        if(!inserted && type === 'IEND'){
+          out.push(buildTextChunk('parameters', parameters));
+          inserted = true;
+        }
+        out.push(full);
+        offset += 12 + len;
+        if(type === 'IEND') break;
+      }
+      return new Blob(out, { type:'image/png' });
+    }
+
+    async function handleFile(file){
+      if(!file) return;
+      setStatus('読み込み中…');
+      state.file = file;
+      state.fileName = file.name || 'image.png';
+      updatePreview(file);
+      try{
+        let bytes = await readAsUint8(file);
+        if(!isPng(bytes)){
+          const blob = await imageToPngBlob(file);
+          bytes = await blobToUint8(blob);
+          state.fileName = state.fileName.replace(/\.[^.]+$/, '') + '.png';
+        }
+        state.pngBytes = bytes;
+        const parsed = parsePNG(bytes);
+        el.metadata.value = parsed.parameters || '';
+        setStatus(state.fileName + ' を読み込みました');
+      }catch(err){
+        console.error(err);
+        setStatus(err.message || '読み込みに失敗しました');
+      }
+    }
+
+    el.fileInput.addEventListener('change', async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(file) await handleFile(file);
+    });
+
+    el.sampleBtn.addEventListener('click', ()=>{
+      el.metadata.value = SAMPLE;
+      setStatus('サンプルを入力しました');
+    });
+
+    el.saveBtn.addEventListener('click', async ()=>{
+      try{
+        if(!state.file) throw new Error('先に画像を読み込んでください');
+        if(!state.pngBytes) throw new Error('PNGデータがありません');
+        const blob = rebuildPNG(state.pngBytes, el.metadata.value || '');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (state.fileName || 'image.png').replace(/\.[^.]+$/, '') + '-pnginfo.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatus('PNGINFO付きPNGを保存しました');
+      }catch(err){
+        console.error(err);
+        setStatus(err.message || '保存に失敗しました');
+      }
+    });
+  </script>
+</body>
+</html>

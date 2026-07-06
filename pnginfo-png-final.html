@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PNGINFO PNG Editor</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root,[data-theme="light"]{--text-xs:clamp(.75rem,.7rem + .25vw,.875rem);--text-sm:clamp(.875rem,.8rem + .35vw,1rem);--text-base:clamp(1rem,.95rem + .25vw,1.125rem);--text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);--text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;--color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;--color-text:#28251d;--color-text-muted:#6d6b66;--color-text-faint:#8c8a84;--color-text-inverse:#f9f8f4;--color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;--color-success:#437a22;--color-warning:#964219;--color-error:#a12c7b;--radius-md:.75rem;--radius-lg:1rem;--radius-xl:1.25rem;--radius-full:9999px;--shadow-sm:0 1px 2px oklch(0.2 0.01 80 / 0.06);--shadow-md:0 8px 24px oklch(0.2 0.01 80 / 0.10);--font-body:'Satoshi','Inter',sans-serif;--transition:180ms cubic-bezier(.16,1,.3,1)}
+    [data-theme="dark"]{--color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#22211f;--color-border:#393836;--color-divider:#262523;--color-text:#ece8de;--color-text-muted:#b0aba0;--color-text-faint:#8b867d;--color-text-inverse:#171614;--color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;--color-success:#6daa45;--color-warning:#fdab43;--color-error:#d163a7;--shadow-sm:0 1px 2px oklch(0 0 0 / 0.24);--shadow-md:0 8px 24px oklch(0 0 0 / 0.34)}
+    *,:before,:after{box-sizing:border-box}html{-webkit-text-size-adjust:none;text-size-adjust:none}body{margin:0;min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.6;background:var(--color-bg);color:var(--color-text)}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer;border:none}textarea{resize:vertical;min-height:8rem}img{max-width:100%;display:block}:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}.app{max-width:1120px;margin:0 auto;padding:calc(env(safe-area-inset-top) + var(--space-4)) var(--space-4) calc(env(safe-area-inset-bottom) + var(--space-8));display:grid;gap:var(--space-4)}.topbar,.card,.meta-preview,.toast,.notice{background:var(--color-surface);border:1px solid color-mix(in oklab,var(--color-text) 10%, transparent);box-shadow:var(--shadow-sm)}.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-4);border-radius:0 0 var(--radius-xl) var(--radius-xl);background:color-mix(in oklab,var(--color-surface) 88%, transparent);backdrop-filter:blur(12px)}.brand{display:flex;align-items:center;gap:var(--space-3)}.logo{width:2.5rem;height:2.5rem;border-radius:.75rem;display:grid;place-items:center;background:linear-gradient(135deg,var(--color-primary-highlight),var(--color-surface-2));color:var(--color-primary)}.logo svg{width:1.4rem;height:1.4rem}h1{font-size:var(--text-xl);line-height:1.1;margin:0}.subtitle{margin:0;color:var(--color-text-muted);font-size:var(--text-sm)}.theme-toggle{width:2.75rem;height:2.75rem;border-radius:var(--radius-full);background:var(--color-surface-2);border:1px solid color-mix(in oklab,var(--color-text) 10%, transparent)}.hero,.workspace,.hero-grid,.workspace-grid,.split,.inline-grid{display:grid;gap:var(--space-4)}.card{border-radius:var(--radius-xl);padding:var(--space-4)}.dropzone{display:grid;gap:var(--space-3);padding:var(--space-5);border:2px dashed color-mix(in oklab,var(--color-primary) 35%, var(--color-border));border-radius:var(--radius-lg);background:color-mix(in oklab,var(--color-primary-highlight) 45%, var(--color-surface));transition:border-color var(--transition),transform var(--transition)}.dropzone.dragover{border-color:var(--color-primary);transform:translateY(-2px)}.dropzone-actions,.pill-row{display:flex;flex-wrap:wrap;gap:var(--space-3)}.pill{padding:.45rem .7rem;border-radius:var(--radius-full);background:var(--color-surface-offset);font-size:var(--text-xs);color:var(--color-text-muted)}.btn{min-height:2.875rem;padding:.8rem 1rem;border-radius:var(--radius-md);display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-size:var(--text-sm);font-weight:700;transition:background var(--transition),transform var(--transition),border-color var(--transition)}.btn:active{transform:scale(.98)}.btn-primary{background:var(--color-primary);color:var(--color-text-inverse)}.btn-primary:hover{background:var(--color-primary-hover)}.btn-secondary{background:var(--color-surface-2);border:1px solid color-mix(in oklab,var(--color-text) 12%, transparent)}.field{display:grid;gap:var(--space-2)}.field label,.label{font-size:var(--text-sm);font-weight:700}.input,.textarea,.select{width:100%;padding:.9rem 1rem;border-radius:var(--radius-md);border:1px solid color-mix(in oklab,var(--color-text) 12%, transparent);background:var(--color-surface-2)}.textarea.code{min-height:17rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92rem;line-height:1.55}.status{display:flex;align-items:center;gap:.6rem;font-size:var(--text-sm);color:var(--color-text-muted)}.status-dot{width:.65rem;height:.65rem;border-radius:var(--radius-full);background:var(--color-warning)}.status-dot.ready{background:var(--color-success)}.meta-preview{padding:var(--space-4);border-radius:var(--radius-lg);display:grid;gap:var(--space-3);background:var(--color-surface-2)}.meta-row{display:grid;gap:.35rem;padding-bottom:var(--space-3);border-bottom:1px solid var(--color-divider)}.meta-row:last-child{border-bottom:none;padding-bottom:0}.meta-key{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-faint)}.helper{font-size:var(--text-xs);color:var(--color-text-muted)}.image-shell{overflow:hidden;border-radius:var(--radius-lg);background:var(--color-surface-offset);aspect-ratio:3/4;display:grid;place-items:center}.image-shell img{width:100%;height:100%;object-fit:contain;background:#00000008}.notice{padding:var(--space-4);border-radius:var(--radius-lg)}.notice.warn{border-color:color-mix(in oklab,var(--color-warning) 30%, transparent)}.notice.error{border-color:color-mix(in oklab,var(--color-error) 30%, transparent)}.footer-actions{position:sticky;bottom:max(env(safe-area-inset-bottom),0px);display:grid;grid-template-columns:1fr;gap:var(--space-3);padding:var(--space-3);background:color-mix(in oklab,var(--color-bg) 92%, transparent);backdrop-filter:blur(10px);border-radius:var(--radius-xl)}.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%) translateY(120%);padding:.85rem 1rem;border-radius:var(--radius-full);transition:transform var(--transition);z-index:40}.toast.show{transform:translateX(-50%) translateY(0)}.hidden{display:none!important}@media (min-width:768px){.hero-grid{grid-template-columns:1.15fr .85fr}.workspace-grid{grid-template-columns:1.2fr .8fr}.split{grid-template-columns:1fr 1fr}.footer-actions{grid-template-columns:repeat(3,auto) 1fr;align-items:center}.footer-actions .btn-primary{justify-self:end}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6.5h10l4 4V17.5A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5z"/><path d="M9 6.5v5h6"/></svg></div>
+        <div><h1>PNGINFO PNG Editor</h1><p class="subtitle">非PNG画像は自動でPNG化してPNGINFOを編集・保存</p></div>
+      </div>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="テーマ切り替え"><span aria-hidden="true">◐</span></button>
+    </header>
+
+    <section class="hero hero-grid">
+      <article class="card">
+        <div class="pill-row"><span class="pill">PNGINFO tEXt</span><span class="pill">非PNGは自動PNG化</span><span class="pill">モバイル対応</span></div>
+        <div class="dropzone" id="dropzone" tabindex="0" aria-label="画像ファイルのドロップエリア">
+          <div><strong>画像を選択</strong><p class="subtitle">PNG はそのまま読み込み、WebP など非PNG画像は一度PNGへ変換してから取り込みます。</p></div>
+          <div class="dropzone-actions"><button class="btn btn-primary" id="pickFileBtn" type="button">画像を開く</button><button class="btn btn-secondary" id="loadSampleBtn" type="button">サンプル読込</button></div>
+          <input id="fileInput" class="hidden" type="file" accept="image/*,.png,.webp,.jpg,.jpeg,.gif,.bmp,.avif" />
+          <p class="helper">PNG は固定シグニチャで始まり、テキスト情報は tEXt / iTXt / zTXt に格納できます。[page:1] このツールでは出力を PNG に統一し、PNGINFO を tEXt として保存します。[page:1]</p>
+        </div>
+      </article>
+      <aside class="card">
+        <div class="status"><span class="status-dot" id="statusDot"></span><span id="statusText">ファイル未読込</span></div>
+        <div class="image-shell" style="margin-top:var(--space-4)"><img id="previewImage" alt="画像プレビュー" class="hidden" /><div id="previewPlaceholder" class="subtitle">プレビューはここに表示</div></div>
+      </aside>
+    </section>
+
+    <section class="notice warn hidden" id="formatNotice"></section>
+
+    <section class="workspace workspace-grid">
+      <article class="card inline-grid">
+        <div class="split">
+          <div class="field"><label for="formatValue">取込形式</label><input id="formatValue" class="input" readonly /></div>
+          <div class="field"><label for="chunkKey">PNGINFOキー</label><input id="chunkKey" class="input" value="parameters" /></div>
+        </div>
+        <div class="field"><label for="entrySelect">検出済みエントリ</label><select id="entrySelect" class="select"></select></div>
+        <div class="field"><label for="metadataValue">メタデータ本文（直接編集）</label><textarea id="metadataValue" class="textarea code"></textarea><p class="helper">保存時は常に PNG の tEXt チャンクへ書き込みます。</p></div>
+        <div class="split">
+          <div class="field"><label for="promptValue">Prompt</label><textarea id="promptValue" class="textarea"></textarea></div>
+          <div class="field"><label for="negativePromptValue">Negative prompt</label><textarea id="negativePromptValue" class="textarea"></textarea></div>
+        </div>
+        <div class="field"><label for="settingsGrid">主要パラメータ</label><div class="split" id="settingsGrid"><input class="input" data-setting="Steps" placeholder="Steps" /><input class="input" data-setting="Sampler" placeholder="Sampler" /><input class="input" data-setting="CFG scale" placeholder="CFG scale" /><input class="input" data-setting="Seed" placeholder="Seed" /><input class="input" data-setting="Size" placeholder="Size" /><input class="input" data-setting="Model" placeholder="Model" /><input class="input" data-setting="Model hash" placeholder="Model hash" /><input class="input" data-setting="Denoising strength" placeholder="Denoising strength" /><input class="input" data-setting="Clip skip" placeholder="Clip skip" /><input class="input" data-setting="Version" placeholder="Version" /></div></div>
+      </article>
+      <aside class="card inline-grid">
+        <div class="meta-preview"><div class="meta-row"><span class="meta-key">抽出ステータス</span><span id="summaryState">待機中</span></div><div class="meta-row"><span class="meta-key">取込形式</span><span id="summaryFormat">未解析</span></div><div class="meta-row"><span class="meta-key">検出エントリ</span><span id="summaryEntries">なし</span></div><div class="meta-row"><span class="meta-key">Prompt 文字数</span><span id="summaryPromptLen">0</span></div><div class="meta-row"><span class="meta-key">Negative 文字数</span><span id="summaryNegativeLen">0</span></div><div class="meta-row"><span class="meta-key">設定数</span><span id="summarySettingCount">0</span></div></div>
+        <div class="field"><span class="label">再構築プレビュー</span><textarea id="rebuiltValue" class="textarea code" readonly></textarea></div>
+      </aside>
+    </section>
+
+    <div class="footer-actions"><button class="btn btn-secondary" id="applyRawBtn" type="button">直接編集を反映</button><button class="btn btn-secondary" id="copyBtn" type="button">テキストをコピー</button><button class="btn btn-secondary" id="downloadTextBtn" type="button">TXT 保存</button><button class="btn btn-primary" id="downloadFileBtn" type="button">PNGINFO付きPNGを保存</button></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const PNG_SIGNATURE = [137,80,78,71,13,10,26,10];
+    const SAMPLE_METADATA = `High resolution, Super detailed, Best Quality, masterpiece, 8K, 4K, beautiful background, the best aesthetics, BREAK\n1girl, pointy_ears, blonde_hair, elf woman\nNegative prompt: photorealistic, realistic, 3d, bad anatomy\nSteps: 30, Sampler: Euler a, CFG scale: 7.0, Seed: 379847553, Size: 1024x1536, Model: APRICOT, Version: v1.7.0`;
+    const state = { file:null, fileName:'', imageUrl:'', format:'', chunks:[], entries:[], pngMetadataByKey:{}, activeIndex:0 };
+    const el = { fileInput:document.getElementById('fileInput'), pickFileBtn:document.getElementById('pickFileBtn'), loadSampleBtn:document.getElementById('loadSampleBtn'), dropzone:document.getElementById('dropzone'), previewImage:document.getElementById('previewImage'), previewPlaceholder:document.getElementById('previewPlaceholder'), statusText:document.getElementById('statusText'), statusDot:document.getElementById('statusDot'), formatNotice:document.getElementById('formatNotice'), formatValue:document.getElementById('formatValue'), chunkKey:document.getElementById('chunkKey'), entrySelect:document.getElementById('entrySelect'), metadataValue:document.getElementById('metadataValue'), promptValue:document.getElementById('promptValue'), negativePromptValue:document.getElementById('negativePromptValue'), rebuiltValue:document.getElementById('rebuiltValue'), summaryState:document.getElementById('summaryState'), summaryFormat:document.getElementById('summaryFormat'), summaryEntries:document.getElementById('summaryEntries'), summaryPromptLen:document.getElementById('summaryPromptLen'), summaryNegativeLen:document.getElementById('summaryNegativeLen'), summarySettingCount:document.getElementById('summarySettingCount'), applyRawBtn:document.getElementById('applyRawBtn'), copyBtn:document.getElementById('copyBtn'), downloadTextBtn:document.getElementById('downloadTextBtn'), downloadFileBtn:document.getElementById('downloadFileBtn'), toast:document.getElementById('toast') };
+    const settingInputs = [...document.querySelectorAll('[data-setting]')];
+
+    function showToast(message){ el.toast.textContent = message; el.toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(()=>el.toast.classList.remove('show'), 2600); }
+    function setStatus(message, ready=false){ el.statusText.textContent = message; el.statusDot.classList.toggle('ready', ready); }
+    function toggleTheme(){ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark' ? 'light' : 'dark'); }
+    document.querySelector('[data-theme-toggle]').addEventListener('click', toggleTheme);
+    if(window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme','dark');
+
+    function readAsUint8(file){ return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onerror=()=>reject(new Error('ファイルの読み込みに失敗しました')); reader.onload=()=>resolve(new Uint8Array(reader.result)); reader.readAsArrayBuffer(file); }); }
+    function bytesToAscii(bytes){ return String.fromCharCode(...bytes); }
+    function readUint32BE(bytes, offset){ return ((bytes[offset] << 24) >>> 0) + ((bytes[offset+1] << 16) >>> 0) + ((bytes[offset+2] << 8) >>> 0) + (bytes[offset+3] >>> 0); }
+    function uint32ToBytesBE(num){ return new Uint8Array([(num>>>24)&255,(num>>>16)&255,(num>>>8)&255,num&255]); }
+    const crcTable = (()=>{ let c; const table = new Uint32Array(256); for(let n=0;n<256;n++){ c=n; for(let k=0;k<8;k++) c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1); table[n]=c>>>0; } return table; })();
+    function crc32(bytes){ let c=0xffffffff; for(const b of bytes) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+    function concatArrays(arrays){ const total=arrays.reduce((sum,arr)=>sum+arr.length,0); const merged=new Uint8Array(total); let offset=0; arrays.forEach(arr=>{ merged.set(arr, offset); offset += arr.length; }); return merged; }
+    function chunkTypeToString(typeBytes){ return String.fromCharCode(...typeBytes); }
+    function detectFormat(bytes){ if(bytes.length >= 8 && PNG_SIGNATURE.every((v,i)=>bytes[i] === v)) return 'png'; if(bytes.length >= 12 && bytesToAscii(bytes.slice(0,4)) === 'RIFF' && bytesToAscii(bytes.slice(8,12)) === 'WEBP') return 'webp'; return 'other-image'; }
+
+    function parseTextChunk(data){ const decoder=new TextDecoder('utf-8'); const zero=data.indexOf(0); if(zero<0) return null; return { key:decoder.decode(data.slice(0,zero)), value:decoder.decode(data.slice(zero+1)) }; }
+    function parseITXtChunk(data){ const decoder=new TextDecoder('utf-8'); let p=data.indexOf(0); if(p<0) return null; const key=decoder.decode(data.slice(0,p)); const compressionFlag=data[p+1]; let rest=p+3; const langEnd=data.indexOf(0,rest); if(langEnd<0) return null; rest=langEnd+1; const translatedEnd=data.indexOf(0,rest); if(translatedEnd<0) return null; rest=translatedEnd+1; const textBytes=data.slice(rest); const value = compressionFlag===0 ? decoder.decode(textBytes) : '[compressed iTXt detected]'; return { key, value }; }
+    function parseZTxtChunk(data){ const decoder=new TextDecoder('utf-8'); const zero=data.indexOf(0); if(zero<0 || zero+1>=data.length) return null; return { key:decoder.decode(data.slice(0,zero)), value:'[compressed zTXt detected]' }; }
+
+    function parsePNG(bytes){
+      let offset=8; const chunks=[]; const entries=[]; const metadataByKey={};
+      while(offset + 12 <= bytes.length){
+        const length=readUint32BE(bytes, offset); offset += 4;
+        const typeBytes=bytes.slice(offset, offset+4); offset += 4;
+        const type=chunkTypeToString(typeBytes);
+        if(offset + length + 4 > bytes.length) throw new Error(`Chunk ${type} の長さが不正です`);
+        const data=bytes.slice(offset, offset+length); offset += length;
+        const crc=readUint32BE(bytes, offset); offset += 4;
+        const chunk={ type, data, crc };
+        if(type==='tEXt'){ const parsed=parseTextChunk(data); if(parsed){ chunk.key=parsed.key; chunk.value=parsed.value; entries.push({ format:'png', storage:type, key:parsed.key, label:`tEXt:${parsed.key}`, value:parsed.value }); metadataByKey[parsed.key]=parsed.value; } }
+        else if(type==='iTXt'){ const parsed=parseITXtChunk(data); if(parsed){ chunk.key=parsed.key; chunk.value=parsed.value; entries.push({ format:'png', storage:type, key:parsed.key, label:`iTXt:${parsed.key}`, value:parsed.value }); metadataByKey[parsed.key]=parsed.value; } }
+        else if(type==='zTXt'){ const parsed=parseZTxtChunk(data); if(parsed){ chunk.key=parsed.key; chunk.value=parsed.value; entries.push({ format:'png', storage:type, key:parsed.key, label:`zTXt:${parsed.key}`, value:parsed.value }); metadataByKey[parsed.key]=parsed.value; } }
+        chunks.push(chunk);
+        if(type==='IEND') break;
+      }
+      if(!chunks.length || chunks[0].type !== 'IHDR') throw new Error('IHDR が見つかりません');
+      if(chunks[chunks.length-1]?.type !== 'IEND') throw new Error('IEND が見つかりません');
+      return { chunks, entries, metadataByKey };
+    }
+
+    function parseSettings(settingsText){ if(!settingsText) return {}; const matches=[...settingsText.matchAll(/([A-Za-z][A-Za-z0-9 _-]*?):\s(.*?)(?=,\s[A-Za-z][A-Za-z0-9 _-]*?:\s|$)/g)]; const result={}; matches.forEach(([,k,v])=>result[k.trim()] = v.trim()); return result; }
+    function splitMetadata(raw){ const normalized=(raw||'').replace(/\r\n/g,'\n').trim(); const marker='\nNegative prompt:'; const negIndex=normalized.indexOf(marker); let prompt=normalized, negative='', settingsText=''; if(negIndex>=0){ prompt=normalized.slice(0,negIndex).trim(); const afterNeg=normalized.slice(negIndex+1); const settingsIndex=afterNeg.search(/\nSteps:\s/i); if(settingsIndex>=0){ negative=afterNeg.slice('Negative prompt:'.length, settingsIndex).trim(); settingsText=afterNeg.slice(settingsIndex+1).trim(); } else negative=afterNeg.replace(/^Negative prompt:\s*/i,'').trim(); } else { const settingsIndex=normalized.search(/\nSteps:\s/i); if(settingsIndex>=0){ prompt=normalized.slice(0,settingsIndex).trim(); settingsText=normalized.slice(settingsIndex+1).trim(); } } return { prompt, negative, settings:parseSettings(settingsText) }; }
+    function buildMetadata(){ const prompt=el.promptValue.value.trim(); const negative=el.negativePromptValue.value.trim(); const settings=settingInputs.map(input=>[input.dataset.setting,input.value.trim()]).filter(([,v])=>v); const parts=[]; if(prompt) parts.push(prompt); if(negative) parts.push(`Negative prompt: ${negative}`); if(settings.length) parts.push(settings.map(([k,v])=>`${k}: ${v}`).join(', ')); return parts.join('\n'); }
+    function refreshSummary(fromRaw=false){ const raw=fromRaw ? el.metadataValue.value : buildMetadata(); const parsed=splitMetadata(raw); el.rebuiltValue.value=raw; el.summaryPromptLen.textContent=String(parsed.prompt.length); el.summaryNegativeLen.textContent=String(parsed.negative.length); el.summarySettingCount.textContent=String(Object.keys(parsed.settings).length); if(!fromRaw) el.metadataValue.value = raw; }
+    function syncUIFromMetadata(raw){ const parsed=splitMetadata(raw || ''); el.metadataValue.value=raw || ''; el.promptValue.value=parsed.prompt || ''; el.negativePromptValue.value=parsed.negative || ''; settingInputs.forEach(input => input.value = parsed.settings[input.dataset.setting] || ''); refreshSummary(true); }
+
+    function updatePreview(file){ if(state.imageUrl) URL.revokeObjectURL(state.imageUrl); state.imageUrl = URL.createObjectURL(file); el.previewImage.src = state.imageUrl; el.previewImage.classList.remove('hidden'); el.previewPlaceholder.classList.add('hidden'); }
+    function populateEntrySelect(){ el.entrySelect.innerHTML=''; if(!state.entries.length){ const option=document.createElement('option'); option.value='0'; option.textContent='新規エントリ'; el.entrySelect.appendChild(option); return; } state.entries.forEach((entry, index) => { const option=document.createElement('option'); option.value=String(index); option.textContent=entry.label; el.entrySelect.appendChild(option); }); el.entrySelect.value=String(state.activeIndex); }
+    function updateEntryUI(){ const entry=state.entries[state.activeIndex]; if(entry){ el.chunkKey.value = entry.key; syncUIFromMetadata(entry.value); } else { syncUIFromMetadata(''); } }
+    function updateMetaSummary(){ el.summaryFormat.textContent = state.format || '未解析'; el.summaryEntries.textContent = state.entries.length ? state.entries.map(entry=>entry.label).join(' / ') : 'なし'; const key=el.chunkKey.value.trim() || 'parameters'; el.summaryState.textContent = `${key} を${state.format ? '編集可能' : '待機中'}`; el.formatValue.value = state.format || ''; }
+    function setNotice(message='', kind='warn'){ if(!message){ el.formatNotice.className='notice hidden'; el.formatNotice.textContent=''; return; } el.formatNotice.className=`notice ${kind}`; el.formatNotice.textContent=message; }
+
+    async function fileToDataUrl(file){ return new Promise((resolve,reject)=>{ const reader=new FileReader(); reader.onerror=()=>reject(new Error('画像の読込に失敗しました')); reader.onload=()=>resolve(reader.result); reader.readAsDataURL(file); }); }
+    async function imageToBlob(file, mimeType='image/png', quality=1){ const dataUrl = await fileToDataUrl(file); const img = await new Promise((resolve,reject)=>{ const image = new Image(); image.onload=()=>resolve(image); image.onerror=()=>reject(new Error('画像のデコードに失敗しました')); image.src=dataUrl; }); const canvas=document.createElement('canvas'); canvas.width=img.naturalWidth || img.width; canvas.height=img.naturalHeight || img.height; const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0); return new Promise((resolve,reject)=>{ canvas.toBlob(blob=> blob ? resolve(blob) : reject(new Error('画像変換に失敗しました')), mimeType, quality); }); }
+    async function blobToUint8(blob){ return new Uint8Array(await blob.arrayBuffer()); }
+
+    async function handleFile(file){
+      if(!file) return;
+      state.file=file; state.fileName=file.name; updatePreview(file);
+      try {
+        const bytes=await readAsUint8(file);
+        let workingBytes=bytes;
+        const detected=detectFormat(bytes);
+        state.entries=[]; state.chunks=[]; state.pngMetadataByKey={}; state.activeIndex=0;
+        if(detected !== 'png'){
+          const convertedBlob = await imageToBlob(file, 'image/png', 1);
+          workingBytes = await blobToUint8(convertedBlob);
+          const dot = (file.name || 'image').lastIndexOf('.');
+          const baseName = dot > 0 ? file.name.slice(0, dot) : (file.name || 'image');
+          const pngFile = new File([convertedBlob], `${baseName}.png`, { type:'image/png' });
+          state.file = pngFile; state.fileName = pngFile.name; state.format = `converted-from-${detected}`;
+          updatePreview(pngFile);
+          setNotice('非PNG画像を受け取ったため、先にPNGへ変換してから取り込みました。出力もPNGになります。', 'warn');
+        } else {
+          state.format = 'png';
+          setNotice('PNG を読み込みました。tEXt / iTXt / zTXt を抽出対象にしています。', 'warn');
+        }
+        const parsed=parsePNG(workingBytes);
+        state.chunks=parsed.chunks; state.entries=parsed.entries; state.pngMetadataByKey=parsed.metadataByKey;
+        if(!state.entries.length){ state.entries.push({ format:'png', storage:'tEXt', key:'parameters', label:'tEXt:parameters (new)', value:'' }); }
+        populateEntrySelect(); updateEntryUI(); updateMetaSummary();
+        setStatus(`${state.fileName} を解析済み`, true);
+        showToast('PNGINFO 編集用に読み込みました');
+      } catch(error){
+        console.error(error); state.format=''; state.entries=[]; state.chunks=[]; populateEntrySelect(); updateMetaSummary(); setNotice(error.message, 'error'); setStatus(error.message || '解析エラー', false); showToast(error.message || '解析に失敗しました');
+      }
+    }
+
+    function buildPngTextChunk(key, value){ const encoder=new TextEncoder(); const keyBytes=encoder.encode(key); const textBytes=encoder.encode(value); const data=concatArrays([keyBytes,new Uint8Array([0]),textBytes]); const typeBytes=new Uint8Array([0x74,0x45,0x58,0x74]); return concatArrays([uint32ToBytesBE(data.length),typeBytes,data,uint32ToBytesBE(crc32(concatArrays([typeBytes,data]))) ]); }
+    function serializePngChunk(chunk){ const typeBytes=new Uint8Array(chunk.type.split('').map(ch=>ch.charCodeAt(0))); return concatArrays([uint32ToBytesBE(chunk.data.length),typeBytes,chunk.data,uint32ToBytesBE(crc32(concatArrays([typeBytes,chunk.data]))) ]); }
+    function exportPNG(){ if(!state.chunks.length) throw new Error('PNG が未解析です'); const key=el.chunkKey.value.trim() || 'parameters'; const newValue=el.metadataValue.value; const rebuilt=[]; let replaced=false; for(const chunk of state.chunks){ if((chunk.type==='tEXt' || chunk.type==='iTXt' || chunk.type==='zTXt') && chunk.key===key){ if(!replaced){ rebuilt.push(buildPngTextChunk(key,newValue)); replaced=true; } continue; } if(chunk.type==='IEND' && !replaced){ rebuilt.push(buildPngTextChunk(key,newValue)); replaced=true; } rebuilt.push(serializePngChunk(chunk)); } return new Blob([concatArrays([new Uint8Array(PNG_SIGNATURE), ...rebuilt])], {type:'image/png'}); }
+    function saveBlob(blob, filename){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 2000); }
+    function applyRawEdit(){ if(state.entries[state.activeIndex]) state.entries[state.activeIndex].value = el.metadataValue.value; syncUIFromMetadata(el.metadataValue.value); updateMetaSummary(); showToast('直接編集を反映しました'); }
+    async function copyText(){ try { await navigator.clipboard.writeText(el.metadataValue.value); showToast('コピーしました'); } catch { showToast('コピーに失敗しました'); } }
+    function downloadText(){ const blob=new Blob([el.metadataValue.value], {type:'text/plain;charset=utf-8'}); saveBlob(blob, 'image-metadata.txt'); showToast('TXT を保存しました'); }
+    function downloadFile(){ try { if(!state.file) throw new Error('先に画像を読み込んでください'); const blob = exportPNG(); const dot = (state.fileName || 'edited').lastIndexOf('.'); const base = dot > 0 ? state.fileName.slice(0, dot) : (state.fileName || 'edited'); saveBlob(blob, `${base}-pnginfo.png`); showToast('PNGINFO 付き PNG を保存しました'); } catch(error){ showToast(error.message || '保存に失敗しました'); } }
+
+    el.pickFileBtn.addEventListener('click', ()=> el.fileInput.click());
+    el.fileInput.addEventListener('change', e => handleFile(e.target.files?.[0]));
+    el.loadSampleBtn.addEventListener('click', ()=>{ state.entries=[{ format:'png', storage:'tEXt', key:'parameters', label:'tEXt:parameters', value:SAMPLE_METADATA }]; state.chunks=[]; state.activeIndex=0; state.format='sample-pnginfo'; populateEntrySelect(); updateEntryUI(); updateMetaSummary(); setNotice('サンプルは PNG parameters 相当の内容です。保存前に実画像を読み込むと PNG に書き戻せます。', 'warn'); setStatus('サンプルを読み込み済み', true); showToast('サンプルをセットしました'); });
+    el.entrySelect.addEventListener('change', e => { state.activeIndex = Number(e.target.value) || 0; updateEntryUI(); updateMetaSummary(); });
+    el.applyRawBtn.addEventListener('click', applyRawEdit); el.copyBtn.addEventListener('click', copyText); el.downloadTextBtn.addEventListener('click', downloadText); el.downloadFileBtn.addEventListener('click', downloadFile);
+    el.metadataValue.addEventListener('input', ()=> refreshSummary(true)); [el.promptValue, el.negativePromptValue, el.chunkKey, ...settingInputs].forEach(node => node.addEventListener('input', ()=> refreshSummary(false)));
+    ['dragenter','dragover'].forEach(type => el.dropzone.addEventListener(type, event => { event.preventDefault(); el.dropzone.classList.add('dragover'); })); ['dragleave','drop'].forEach(type => el.dropzone.addEventListener(type, event => { event.preventDefault(); el.dropzone.classList.remove('dragover'); })); el.dropzone.addEventListener('drop', event => handleFile(event.dataTransfer.files?.[0])); el.dropzone.addEventListener('keydown', event => { if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); el.fileInput.click(); }});
+    state.entries=[{ format:'png', storage:'tEXt', key:'parameters', label:'tEXt:parameters', value:'' }]; state.format='sample-pnginfo'; populateEntrySelect(); updateEntryUI(); updateMetaSummary();
+  </script>
+</body>
+</html>

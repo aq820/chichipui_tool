@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pnginfo-markdown-tool</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #edeae5;
+      --color-divider: #dcd9d5; --color-text: #28251d; --color-text-muted: #6c6a64; --color-primary: #01696f; --color-primary-highlight: #cedcd8;
+      --color-error: #a12c7b; --color-success: #437a22; --radius-md: 0.75rem; --radius-lg: 1rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.05); --shadow-md: 0 8px 22px rgba(0,0,0,.08); --font-body: 'Satoshi', 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #252320;
+      --color-divider: #2b2a28; --color-text: #e1ded6; --color-text-muted: #aaa69f; --color-primary: #4f98a3; --color-primary-highlight: #313b3b;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.25); --shadow-md: 0 8px 22px rgba(0,0,0,.32);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.6; color: var(--color-text); background: linear-gradient(180deg, var(--color-bg), var(--color-surface-offset)); }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; border: none; }
+    textarea { resize: vertical; }
+    .app { max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); padding: var(--space-4) var(--space-5); border: 1px solid rgba(40,37,29,.12); background: rgba(255,255,255,.5); backdrop-filter: blur(12px); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+    .brand { display: flex; align-items: center; gap: var(--space-3); }
+    .logo { width: 40px; height: 40px; color: var(--color-primary); }
+    .brand h1 { margin: 0; font-size: var(--text-lg); }
+    .brand p { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+    .top-actions, .utility-links { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+    .icon-btn, .btn { min-height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); text-decoration: none; }
+    .btn.primary { background: var(--color-primary); color: #fff; }
+    .btn.secondary, .icon-btn { background: var(--color-surface); color: var(--color-text); border-color: rgba(40,37,29,.12); }
+    .layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: var(--space-6); }
+    .panel { background: rgba(255,255,255,.62); border: 1px solid rgba(40,37,29,.12); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+    .panel-head { padding: var(--space-5); border-bottom: 1px solid var(--color-divider); }
+    .panel-head h2 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+    .panel-head p, .hint, .status, .footer-note { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+    .panel-body { padding: var(--space-5); }
+    .dropzone { border: 1.5px dashed rgba(1,105,111,.35); background: linear-gradient(180deg, rgba(1,105,111,.06), transparent); border-radius: var(--radius-lg); padding: var(--space-8); text-align: center; display: grid; gap: var(--space-3); place-items: center; }
+    .dropzone input { display: none; }
+    .status.error { color: var(--color-error); }
+    .status.ok { color: var(--color-success); }
+    .thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-3); margin-top: var(--space-5); }
+    .thumb { background: var(--color-surface); border: 1px solid rgba(40,37,29,.1); border-radius: var(--radius-md); overflow: hidden; }
+    .thumb img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--color-surface-offset); }
+    .thumb-meta { padding: var(--space-2) var(--space-3) var(--space-3); }
+    .thumb-name { font-size: var(--text-xs); word-break: break-all; }
+    .thumb-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); margin-top: var(--space-2); }
+    .thumb-actions button { min-height: 36px; border-radius: var(--radius-full); background: var(--color-surface-offset); color: var(--color-text); }
+    label { display: grid; gap: var(--space-2); font-size: var(--text-sm); font-weight: 700; }
+    input[type="text"], textarea { width: 100%; min-height: 52px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); border: 1px solid rgba(40,37,29,.14); background: var(--color-surface-2); color: var(--color-text); }
+    textarea.output { min-height: 70dvh; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.5; }
+    .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin-top: var(--space-5); }
+    .inline-note { padding: var(--space-3) var(--space-4); background: var(--color-primary-highlight); border-radius: var(--radius-md); font-size: var(--text-sm); }
+    .filename-form { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .preview-name { font-size: var(--text-sm); color: var(--color-text-muted); }
+    @media (max-width: 920px) { .layout, .meta-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 64" aria-label="PNG tool logo" fill="none"><rect x="10" y="10" width="44" height="44" rx="14" stroke="currentColor" stroke-width="4"></rect><path d="M21 39V25h7c4 0 7 2.3 7 7s-3 7-7 7h-7Zm4-3h3c2.1 0 3.1-1.5 3.1-4s-1-4-3.1-4h-3v8Zm14 3V25h4l8 9.7V25h4v14h-3.8L43 29.2V39h-4Z" fill="currentColor"></path></svg>
+        <div><h1>PNG info → Markdown</h1><p>取り込み前にベース名を決め、連番付きファイル名でMarkdownを出力します。</p></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="テーマ切替">🌙</button>
+        <button class="btn secondary" type="button" id="clearAllBtn">全消去</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>画像登録</h2>
+          <p>PNGを最大12件まで追加できます。ベース名 + 01〜12 の連番で出力用ファイル名を作ります。</p>
+        </div>
+        <div class="panel-body">
+          <div class="filename-form">
+            <label>基本のベース名
+              <input id="baseNameInput" type="text" placeholder="例: MyImageSet" />
+            </label>
+            <div class="preview-name" id="baseNamePreview">未入力時: Images_YYYYMMDDHHmm_01.png</div>
+          </div>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="PNGファイルを追加">
+            <strong>PNGをここにドロップ</strong>
+            <div class="hint">またはファイル選択から追加 / 最大12件 / 複数選択対応</div>
+            <button class="btn primary" type="button" id="pickBtn">PNGを選ぶ</button>
+            <input id="fileInput" type="file" accept="image/png" multiple />
+          </div>
+          <div class="status" id="status">まだ画像は登録されていません。</div>
+          <div class="meta-grid">
+            <div class="inline-note">ファイル名は元ファイル名ではなく、指定したベース名 + 連番で統一して出力します。</div>
+            <div class="inline-note">ベース名が空欄なら Images_YYYYMMDDHHmm_01〜12.png の形式を自動で使います。</div>
+          </div>
+          <div class="thumb-grid" id="thumbGrid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>出力</h2>
+          <p>外側のコードフェンスは付けず、そのまま貼れる本文だけを出力します。</p>
+        </div>
+        <div class="panel-body">
+          <label>生成結果<textarea id="output" class="output" spellcheck="false" readonly></textarea></label>
+          <div class="utility-links" style="margin-top: .5rem;">
+            <button class="btn primary" type="button" id="copyBtn">出力をコピー</button>
+            <button class="btn secondary" type="button" id="downloadAllImagesBtn">画像をZIP保存</button>
+            <a class="btn secondary" href="https://tinyurl.com/y63jwarm" target="_blank" rel="noopener noreferrer">すばやく登録</a>
+            <a class="btn secondary" href="#" id="downloadBtn">Markdownを保存</a>
+          </div>
+          <div class="footer-note" style="margin-top: 1rem;">各画像の生成情報は画像ごとに個別に読み取ります。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const html = document.documentElement;
+      const themeBtn = document.querySelector('[data-theme-toggle]');
+      let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const applyTheme = () => { html.setAttribute('data-theme', theme); themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙'; };
+      applyTheme();
+      themeBtn.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; applyTheme(); });
+
+      const MAX_FILES = 12;
+      const state = { files: [], importBatchToken: '' };
+      const fileInput = document.getElementById('fileInput');
+      const pickBtn = document.getElementById('pickBtn');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const downloadAllImagesBtn = document.getElementById('downloadAllImagesBtn');
+      const dropzone = document.getElementById('dropzone');
+      const status = document.getElementById('status');
+      const thumbGrid = document.getElementById('thumbGrid');
+      const output = document.getElementById('output');
+      const baseNameInput = document.getElementById('baseNameInput');
+      const baseNamePreview = document.getElementById('baseNamePreview');
+
+      updateBaseNamePreview();
+      baseNameInput.addEventListener('input', () => { updateBaseNamePreview(); render(); });
+      pickBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', async e => { await addFiles([...e.target.files]); fileInput.value = ''; });
+      clearAllBtn.addEventListener('click', () => { state.files.forEach(item => URL.revokeObjectURL(item.preview)); state.files = []; state.importBatchToken = ''; render(); setStatus('まだ画像は登録されていません。'); });
+      copyBtn.addEventListener('click', async () => { await navigator.clipboard.writeText(output.value || ''); setStatus('出力をコピーしました。', 'ok'); });
+      downloadBtn.addEventListener('click', e => { e.preventDefault(); const blob = new Blob([output.value || ''], { type: 'text/markdown;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pnginfo-${formatDateForFile(new Date())}.md`; a.click(); URL.revokeObjectURL(a.href); });
+      downloadAllImagesBtn.addEventListener('click', async () => { await downloadAllAsZip(); });
+      ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, e => { e.preventDefault(); }));
+      dropzone.addEventListener('drop', async e => { e.preventDefault(); await addFiles([...e.dataTransfer.files]); });
+      dropzone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+
+      function updateBaseNamePreview() {
+        const stamp = formatStamp(new Date());
+        const base = sanitizeBaseName(baseNameInput.value.trim()) || `Images_${stamp}`;
+        baseNamePreview.textContent = `出力例: ${base}_01.png`;
+      }
+
+      async function addFiles(files) {
+        try {
+          const pngs = files.filter(file => file.type === 'image/png' || file.name.toLowerCase().endsWith('.png'));
+          if (!pngs.length) return setStatus('PNGファイルを追加してください。', 'error');
+          const room = MAX_FILES - state.files.length;
+          if (room <= 0) return setStatus('登録上限は12件です。', 'error');
+          const accepted = pngs.slice(0, room);
+          if (!state.importBatchToken) state.importBatchToken = formatStamp(new Date());
+          const parsed = [];
+          for (const file of accepted) parsed.push(await parsePngFile(file));
+          state.files.push(...parsed);
+          render();
+          setStatus(`${accepted.length} 件のPNGを追加しました。`, 'ok');
+        } catch (error) {
+          console.error(error);
+          setStatus('PNGの解析中にエラーが発生しました。', 'error');
+        }
+      }
+
+      function render() {
+        thumbGrid.innerHTML = '';
+        state.files.forEach((item, index) => {
+          const generatedName = makeOutputFileName(index);
+          const card = document.createElement('article');
+          card.className = 'thumb';
+          card.innerHTML = `<img src="${item.preview}" alt="${escapeHtml(generatedName)}" loading="lazy" width="240" height="240"><div class="thumb-meta"><div class="thumb-name">${index + 1}. ${escapeHtml(generatedName)}</div><div class="thumb-actions"><button type="button" data-action="up">↑</button><button type="button" data-action="download">保存</button><button type="button" data-action="remove">削除</button></div></div>`;
+          card.querySelector('[data-action="remove"]').addEventListener('click', () => { URL.revokeObjectURL(item.preview); state.files.splice(index, 1); render(); });
+          card.querySelector('[data-action="up"]').addEventListener('click', () => { if (index === 0) return; [state.files[index - 1], state.files[index]] = [state.files[index], state.files[index - 1]]; render(); });
+          card.querySelector('[data-action="download"]').addEventListener('click', async () => { await downloadRenamedImage(item, index); });
+          thumbGrid.appendChild(card);
+        });
+        output.value = buildMarkdown(state.files);
+      }
+
+      function makeOutputFileName(index) {
+        const fallbackStamp = state.importBatchToken || formatStamp(new Date());
+        const base = sanitizeBaseName(baseNameInput.value.trim()) || `Images_${fallbackStamp}`;
+        return `${base}_${String(index + 1).padStart(2, '0')}.png`;
+      }
+
+      function sanitizeBaseName(value) {
+        return value.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      }
+
+
+
+      async function downloadRenamedImage(item, index) {
+        const blob = item.file.slice(0, item.file.size, 'image/png');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = makeOutputFileName(index);
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        setStatus(`${makeOutputFileName(index)} を保存しました。`, 'ok');
+      }
+
+      async function downloadAllAsZip() {
+        if (!state.files.length) return setStatus('先にPNGを追加してください。', 'error');
+        try {
+          const entries = [];
+          for (let i = 0; i < state.files.length; i++) {
+            const item = state.files[i];
+            const bytes = new Uint8Array(await item.file.arrayBuffer());
+            entries.push({ name: makeOutputFileName(i), bytes });
+          }
+          const zipBytes = createZip(entries);
+          const blob = new Blob([zipBytes], { type: 'application/zip' });
+          const fallbackStamp = state.importBatchToken || formatStamp(new Date());
+          const base = sanitizeBaseName(baseNameInput.value.trim()) || `Images_${fallbackStamp}`;
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `${base}_images.zip`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          setStatus('画像ZIPを保存しました。', 'ok');
+        } catch (error) {
+          console.error(error);
+          setStatus('ZIP作成中にエラーが発生しました。', 'error');
+        }
+      }
+
+      function createZip(entries) {
+        const localParts = [];
+        const centralParts = [];
+        let offset = 0;
+        for (const entry of entries) {
+          const nameBytes = new TextEncoder().encode(entry.name);
+          const data = entry.bytes;
+          const crc = crc32(data);
+          const local = new Uint8Array(30 + nameBytes.length + data.length);
+          const lv = new DataView(local.buffer);
+          lv.setUint32(0, 0x04034b50, true);
+          lv.setUint16(4, 20, true);
+          lv.setUint16(6, 0, true);
+          lv.setUint16(8, 0, true);
+          lv.setUint16(10, 0, true);
+          lv.setUint16(12, 0, true);
+          lv.setUint32(14, crc, true);
+          lv.setUint32(18, data.length, true);
+          lv.setUint32(22, data.length, true);
+          lv.setUint16(26, nameBytes.length, true);
+          lv.setUint16(28, 0, true);
+          local.set(nameBytes, 30);
+          local.set(data, 30 + nameBytes.length);
+          localParts.push(local);
+
+          const central = new Uint8Array(46 + nameBytes.length);
+          const cv = new DataView(central.buffer);
+          cv.setUint32(0, 0x02014b50, true);
+          cv.setUint16(4, 20, true);
+          cv.setUint16(6, 20, true);
+          cv.setUint16(8, 0, true);
+          cv.setUint16(10, 0, true);
+          cv.setUint16(12, 0, true);
+          cv.setUint16(14, 0, true);
+          cv.setUint32(16, crc, true);
+          cv.setUint32(20, data.length, true);
+          cv.setUint32(24, data.length, true);
+          cv.setUint16(28, nameBytes.length, true);
+          cv.setUint16(30, 0, true);
+          cv.setUint16(32, 0, true);
+          cv.setUint16(34, 0, true);
+          cv.setUint16(36, 0, true);
+          cv.setUint32(38, 0, true);
+          cv.setUint32(42, offset, true);
+          central.set(nameBytes, 46);
+          centralParts.push(central);
+          offset += local.length;
+        }
+        const centralSize = centralParts.reduce((s, p) => s + p.length, 0);
+        const end = new Uint8Array(22);
+        const ev = new DataView(end.buffer);
+        ev.setUint32(0, 0x06054b50, true);
+        ev.setUint16(4, 0, true);
+        ev.setUint16(6, 0, true);
+        ev.setUint16(8, entries.length, true);
+        ev.setUint16(10, entries.length, true);
+        ev.setUint32(12, centralSize, true);
+        ev.setUint32(16, offset, true);
+        ev.setUint16(20, 0, true);
+        const totalSize = offset + centralSize + end.length;
+        const zip = new Uint8Array(totalSize);
+        let pos = 0;
+        for (const part of localParts) { zip.set(part, pos); pos += part.length; }
+        for (const part of centralParts) { zip.set(part, pos); pos += part.length; }
+        zip.set(end, pos);
+        return zip;
+      }
+
+      const crcTable = (() => {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let j = 0; j < 8; j++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+          table[i] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32(bytes) {
+        let crc = 0xffffffff;
+        for (let i = 0; i < bytes.length; i++) crc = crcTable[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+        return (crc ^ 0xffffffff) >>> 0;
+      }
+
+      function setStatus(message, kind = '') { status.textContent = message; status.className = `status ${kind}`.trim(); }
+
+      async function parsePngFile(file) {
+        const buffer = await file.arrayBuffer();
+        const view = new DataView(buffer);
+        const chunks = readPngChunks(view, buffer);
+        const textMap = extractTextChunks(chunks);
+        const exifText = extractExifUserComment(chunks);
+        const rawText = pickMetadataText(textMap, exifText);
+        const parsed = parseGenerationText(rawText);
+        return { file, preview: URL.createObjectURL(file), rawText, parsed };
+      }
+
+      function readPngChunks(view, buffer) {
+        const signature = [137,80,78,71,13,10,26,10];
+        for (let i = 0; i < signature.length; i++) if (view.getUint8(i) !== signature[i]) throw new Error('Invalid PNG');
+        const chunks = [];
+        let offset = 8;
+        while (offset < buffer.byteLength) {
+          const length = view.getUint32(offset); offset += 4;
+          const type = readString(view, offset, 4); offset += 4;
+          const data = buffer.slice(offset, offset + length); offset += length; offset += 4;
+          chunks.push({ type, data });
+          if (type === 'IEND') break;
+        }
+        return chunks;
+      }
+
+      function extractTextChunks(chunks) {
+        const map = new Map();
+        for (const chunk of chunks) {
+          if (chunk.type === 'tEXt') {
+            const bytes = new Uint8Array(chunk.data);
+            const idx = bytes.indexOf(0);
+            if (idx > -1) map.set(decodeBest(bytes.slice(0, idx)), decodeBest(bytes.slice(idx + 1)));
+          }
+          if (chunk.type === 'iTXt') {
+            const bytes = new Uint8Array(chunk.data);
+            let p = 0;
+            while (p < bytes.length && bytes[p] !== 0) p++;
+            const key = decodeBest(bytes.slice(0, p)); p++;
+            const compressedFlag = bytes[p]; p++; p++;
+            while (p < bytes.length && bytes[p] !== 0) p++; p++;
+            while (p < bytes.length && bytes[p] !== 0) p++; p++;
+            const textBytes = bytes.slice(p);
+            let value = '';
+            try { value = compressedFlag ? '' : decodeBest(textBytes); } catch { value = ''; }
+            map.set(key, value);
+          }
+        }
+        return map;
+      }
+
+      function decodeBest(bytes) {
+        const utf8 = tryDecode(bytes, 'utf-8');
+        if (utf8 && !looksMojibake(utf8)) return utf8.trim();
+        const sjis = tryDecode(bytes, 'shift_jis');
+        if (sjis && !looksMojibake(sjis)) return sjis.trim();
+        const utf16 = tryDecode(bytes, 'utf-16le');
+        if (utf16 && !looksMojibake(utf16)) return utf16.trim();
+        return (utf8 || sjis || utf16 || '').trim();
+      }
+
+      function tryDecode(bytes, enc) { try { return new TextDecoder(enc, { fatal: false }).decode(bytes); } catch { return ''; } }
+      function looksMojibake(text) { return !!text && /ã.|ï¼|â.|�/.test(text); }
+
+      function extractExifUserComment(chunks) {
+        const exif = chunks.find(chunk => chunk.type === 'eXIf');
+        if (!exif) return '';
+        const bytes = new Uint8Array(exif.data);
+        if (bytes.length < 8) return '';
+        const little = String.fromCharCode(bytes[0], bytes[1]) === 'II';
+        const get16 = o => little ? bytes[o] | (bytes[o + 1] << 8) : (bytes[o] << 8) | bytes[o + 1];
+        const get32 = o => little ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : ((bytes[o] << 24) | (bytes[o + 1] << 16) | (bytes[o + 2] << 8) | bytes[o + 3]) >>> 0;
+        const ifdOffset = get32(4);
+        if (ifdOffset + 2 > bytes.length) return '';
+        const count = get16(ifdOffset);
+        for (let i = 0; i < count; i++) {
+          const base = ifdOffset + 2 + i * 12;
+          if (base + 12 > bytes.length) break;
+          const tag = get16(base);
+          if (tag !== 0x8769 && tag !== 0x9286) continue;
+          if (tag === 0x8769) {
+            const sub = get32(base + 8);
+            const subCount = get16(sub);
+            for (let j = 0; j < subCount; j++) {
+              const sbase = sub + 2 + j * 12;
+              if (sbase + 12 > bytes.length) break;
+              if (get16(sbase) === 0x9286) return decodeExifComment(bytes, get32(sbase + 4), get32(sbase + 8));
+            }
+          } else {
+            return decodeExifComment(bytes, get32(base + 4), get32(base + 8));
+          }
+        }
+        return '';
+      }
+
+      function decodeExifComment(bytes, count, valueOffset) {
+        if (valueOffset + count > bytes.length || count < 8) return '';
+        const raw = bytes.slice(valueOffset, valueOffset + count);
+        const header = new TextDecoder('ascii').decode(raw.slice(0, 8));
+        const body = raw.slice(8);
+        if (header.startsWith('ASCII')) return decodeBest(body).replace(/\0+$/g, '').trim();
+        if (header.startsWith('UNICODE')) return tryDecode(body, 'utf-16le').replace(/\0+$/g, '').trim();
+        return decodeBest(raw).replace(/\0+$/g, '').trim();
+      }
+
+      function pickMetadataText(map, exifText) {
+        const preferredKeys = ['parameters', 'Parameters', 'Comment', 'comment', 'Description', 'description'];
+        for (const key of preferredKeys) {
+          const value = map.get(key);
+          if (value && value.trim()) return value.trim();
+        }
+        for (const value of map.values()) if (value && /Negative prompt:|Steps:|Sampler:|CFG scale:|Seed:/i.test(value)) return value.trim();
+        return exifText || '';
+      }
+
+      function parseGenerationText(text) {
+        const normalized = (text || '').replace(/\r\n/g, '\n').trim();
+        const negativeMatch = normalized.match(/\n?Negative prompt:\s*([\s\S]*?)\nSteps:/i);
+        const stepsIndex = normalized.search(/\nSteps:/i);
+        const prompt = negativeMatch ? normalized.slice(0, negativeMatch.index).trim().replace(/,$/, '') : (stepsIndex > -1 ? normalized.slice(0, stepsIndex).trim().replace(/,$/, '') : normalized);
+        const negative = negativeMatch ? negativeMatch[1].trim().replace(/,$/, '') : '';
+        const paramsLine = stepsIndex > -1 ? normalized.slice(stepsIndex).trim() : '';
+        const params = {};
+        const regex = /([A-Za-z ]+):\s*([^,\n]+(?: x [^,\n]+)?)/g;
+        let match;
+        while ((match = regex.exec(paramsLine)) !== null) params[match[1].trim()] = match[2].trim();
+        return { prompt, negative, steps: params['Steps'] || '', scale: params['CFG scale'] || '', sampler: params['Sampler'] || '', model: params['Model'] || params['Model hash'] || '', seed: params['Seed'] || '' };
+      }
+
+      function buildMarkdown(items) {
+        const now = new Date();
+        const todaySlash = formatDateSlash(now);
+        const todayDash = formatDateDash(now);
+        const nowSlashTime = `${todaySlash} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        const sections = items.map((item, idx) => buildSection(item, idx + 1)).join('\n');
+        return `---\nfileClass: AIImage\ntags:\n  - ${todaySlash}\n  - AI画像生成\n  - ちちぷい\ncreated: ${todayDash}\ntime: ${nowSlashTime}\npostdate:\n投稿予約: false\n投稿テーマ:\n企画区分:\nキャラ枠:\nキャラ名:\n使用モデル01:\n使用モデル02:\n備考:\n\n---\n\n# メモ\n\`\`\`\n\n\`\`\`\n***\n\n# キャプション\n\`\`\`\n\n\`\`\`\n\n---\n\n# 生成情報\n\n${sections}`;
+      }
+
+      function buildSection(item, index) {
+        const data = item?.parsed || emptyParsed();
+        const fileName = makeOutputFileName(index - 1);
+        return `## 画像${circledNumber(index)}\n\n![[${fileName}]]\n\n### プロンプト\n\`\`\`\n${data.prompt || ''}\n\`\`\`\n### ネガティブプロンプト\n\`\`\`\n${data.negative || ''}\n\`\`\`\n### Steps\n\`\`\`\n${data.steps || ''}\n\`\`\`\n### Scale\n\`\`\`\n${data.scale || ''}\n\`\`\`\n### Sampler\n\`\`\`\n${data.sampler || ''}\n\`\`\`\n### CheckPoint\n\`\`\`\n${data.model || ''}\n\`\`\`\n### LoRA\n\`\`\`\n\n\`\`\`\n### Seed\n\`\`\`\n${data.seed || ''}\n\`\`\`\n---\n`;
+      }
+
+      function emptyParsed() { return { prompt: '', negative: '', steps: '', scale: '', sampler: '', model: '', seed: '' }; }
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function formatDateSlash(d) { return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`; }
+      function formatDateDash(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+      function formatDateForFile(d) { return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`; }
+      function formatStamp(d) { return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`; }
+      function circledNumber(n) { const nums = ['⓪','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫']; return nums[n] || `(${n})`; }
+      function readString(view, offset, length) { return Array.from({ length }, (_, i) => String.fromCharCode(view.getUint8(offset + i))).join(''); }
+      function escapeHtml(str) { return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+      output.value = buildMarkdown([]);
+    })();
+  </script>
+</body>
+</html>
